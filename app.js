@@ -72,7 +72,7 @@ const init = () => {
         DB.sequelize
             .authenticate()
             .then(() => {
-                app.listen(process.env.APP_PORT, () => console.log("server listening on port " + process.env.APP_PORT + " in " + process.env.APP_ENV + " mode version is " + require("./package.json").version));
+                app.listen(process.env.APP_PORT, () => console.log(" 💻 Server listening on port " + process.env.APP_PORT + " in " + process.env.APP_ENV + " mode version is " + require("./package.json").version));
             })
             .catch(error => {
                 console.log('Error connecting to DB', error);
