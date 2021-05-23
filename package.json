@@ -1,0 +1,32 @@
+{
+  "name": "example-app",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon node app.js"
+  },
+  "dependencies": {
+    "@hapi/joi": "^17.1.1",
+    "@hapi/validate": "^1.1.3",
+    "bcrypt": "*",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.4",
+    "cors": "^2.8.5",
+    "debug": "~2.6.9",
+    "dotenv": "^8.1.0",
+    "express": "^4.17.1",
+    "graphql": "^14.5.6",
+    "graphql-tag": "^2.10.1",
+    "graphql-tools": "^4.0.5",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "~1.9.1",
+    "nodemon": "^1.19.2",
+    "pg": "^7.12.1",
+    "sequelize": "^5.18.4"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.2.0"
+  }
+}
