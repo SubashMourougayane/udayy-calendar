@@ -24,7 +24,8 @@
     "morgan": "~1.9.1",
     "nodemon": "^1.19.2",
     "pg": "^7.12.1",
-    "sequelize": "^5.18.4"
+    "sequelize": "^5.18.4",
+    "uniqid": "^5.3.0"
   },
   "devDependencies": {
     "sequelize-cli": "^6.2.0"

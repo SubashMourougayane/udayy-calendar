@@ -1,5 +1,7 @@
 'use strict';
 
+const { Sequelize } = require(".");
+
 module.exports = (sequelize, DataTypes) => {
   var events = sequelize.define(
     "events",
@@ -34,6 +36,15 @@ module.exports = (sequelize, DataTypes) => {
       isRecurring: {
         type: DataTypes.BOOLEAN
       },
+      recurringType: {
+        type: DataTypes.STRING
+      },
+      daysOfWeek: {
+        type: DataTypes.ARRAY(DataTypes.INTEGER)
+      },
+      uniqueTag: {
+        type: DataTypes.STRING
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE
@@ -47,7 +58,6 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   events.associate = (models) => {
-    console.log("associate");
   }
 
 

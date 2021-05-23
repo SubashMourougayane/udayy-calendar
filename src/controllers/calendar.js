@@ -1,116 +1,92 @@
 const Event = require('../models').events;
 const GATEKEEPER = require('../gatekeeper/gatekeeper');
 const { Op } = require('sequelize')
+const calendarUtils = require('../utils/calendar')
+var uniqid = require('uniqid');
 
-module.exports.createFixedEvent = async (req, res, next) => {
-    let startDate = req.body.startDate;
-    let startTime = req.body.startTime;
-    let endDate = req.body.endDate;
-    let endTime = req.body.endTime;
-    let overlapObject = await Event.findAll({
-        raw: true,
-        where: {
-            userId: req.user.id,
-            [Op.or]: [
-                {
-                    [Op.and]: [
-                        {
-                            startDate: {
-                                [Op.between]: [startDate, endDate]
-                            }
-                        },
-                        {
-                            [Op.or]: [
-                                {
-                                    startTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                },
-                                {
-                                    endTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                }
-                            ]
-                        }
+module.exports.createEvent = async (req, res, next) => {
 
+    let startDate = req.body.startDate
+    let startTime = req.body.startTime
+    let endDate = req.body.endDate
+    let endTime = req.body.endTime
 
-                    ]
-                },
-                {
-                    [Op.and]: [
-                        {
-                            endDate: {
-                                [Op.between]: [startDate, endDate]
-                            }
-                        },
-                        {
-                            [Op.or]: [
-                                {
-                                    startTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                },
-                                {
-                                    endTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                }
-                            ]
-                        }
-
-
-                    ]
-                },
-                {
-                    [Op.and]: [
-                        {
-                            startDate: {
-                                [Op.lte]: startDate
-                            },
-                            endDate: {
-                                [Op.gte]: endDate
-                            }
-                        },
-                        {
-                            [Op.or]: [
-                                {
-                                    startTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                },
-                                {
-                                    endTime: {
-                                        [Op.between]: [startTime, endTime]
-                                    }
-                                }
-                            ]
-                        }
-
-                    ],
-                }
-            ]
-        }
-    })
+    let overlapObject = await calendarUtils.checkOverlapEvent(req.user.id, startDate, endDate, startTime, endTime)
     console.log(overlapObject);
-    if (overlapObject.length === 0){
+    if (overlapObject.length === 0) {
+
         req.body['userId'] = req.user.id;
-        Event.create(req.body)
-            .then(data => {
-                GATEKEEPER.successDataResponse(res, data);
-            })
-            .catch(err => {
-                console.log(err);
-                GATEKEEPER.serverError(res, "Error creating event");
-    
-            })
-    }else{
-        GATEKEEPER.clientError(res,`Event Overlaping with another event with the title ${overlapObject[0].title}`)
+
+        if (req.body.isRecurring) {
+
+            startDate = new Date(startDate)
+            let month = new Date(startDate).getMonth();
+            let year = new Date(startDate).getFullYear();
+            let day = new Date(startDate).getDay();
+
+            endDate = req.body.endDate ? new Date(endDate) : new Date(new Date(startDate).setFullYear(year + 1));
+
+
+            let iDate = new Date(startDate);
+            let recurringObjects = []
+            let uniqueTag = uniqid();
+            while (iDate <= endDate) {
+
+                if (req.body.daysOfWeek.includes(iDate.getDay())) {
+                   
+                
+                    let tempObj = {
+                        userId : req.user.id,
+                        title : req.body.title,
+                        description : req.body.description,
+                        startDate : iDate,
+                        endDate : iDate,
+                        startTime : req.body.startTime,
+                        endTime : req.body.endTime,
+                        isRecurring : req.body.isRecurring,
+                        recurringType : req.body.recurringType,
+                        daysOfWeek : req.body.daysOfWeek,
+                        uniqueTag : uniqueTag
+                    }
+                    recurringObjects.push(tempObj)
+
+                }
+
+                let temp = iDate.setDate(iDate.getDate() + 1)
+                iDate = new Date(temp)
+            }
+            console.log(recurringObjects);
+            Event.bulkCreate(recurringObjects)
+                .then(data => {
+                    GATEKEEPER.successDataResponse(res, data);
+                })
+                .catch(err => {
+                    console.log(err);
+                    GATEKEEPER.serverError(res, "Error creating event");
+
+                })
+
+
+
+        } else {
+
+            Event.create(req.body)
+                .then(data => {
+                    GATEKEEPER.successDataResponse(res, data);
+                })
+                .catch(err => {
+                    console.log(err);
+                    GATEKEEPER.serverError(res, "Error creating event");
+
+                })
+        }
+
+
+    } else {
+        GATEKEEPER.clientError(res, `Event Overlaping with another event`)
     }
 
 }
-
-
 
 
 module.exports.getEvents = (req, res, next) => {
@@ -118,10 +94,8 @@ module.exports.getEvents = (req, res, next) => {
     let endDate = new Date(req.query.endDate);
 
 
-    Event.findAndCountAll({
+    Event.findAll({
         raw: true,
-        limit: req.query.pageSize || 10,
-        offset: req.query.page || 1,
         where: {
             userId: req.user.id,
             [Op.or]: [
@@ -153,7 +127,7 @@ module.exports.getEvents = (req, res, next) => {
     })
         .then(data => {
             console.log(data);
-            GATEKEEPER.successPaginatedDataResponse(res, data, req.query.page || 1, req.query.pageSize || 10);
+            GATEKEEPER.successDataResponse(res, data);
         })
         .catch(err => {
             console.log(err);
@@ -161,4 +135,42 @@ module.exports.getEvents = (req, res, next) => {
 
         })
 
+}
+
+module.exports.editOneInstance = (req, res, next) => {
+    Event.update(req.body, {
+        where : {
+            userId : req.user.id,
+            id : req.params.id
+        },
+        returning: true,
+    }).then(data => {
+        console.log(data);
+        GATEKEEPER.successDataResponse(res, data[1]);
+    })
+    .catch(err => {
+        console.log(err);
+        GATEKEEPER.serverError(res, "Error creating event");
+
+    })
+}
+
+module.exports.editFromOneInstance = (req, res, next) => {
+    Event.update(req.body, {
+        where : {
+            userId : req.user.id,
+            uniqueTag : req.params.uniqueTag,
+            id : {
+                [Op.gte] : req.params.id
+            }
+        },
+        returning : true
+    }).then(data => {
+        GATEKEEPER.successDataResponse(res, data[1]);
+    })
+    .catch(err => {
+        console.log(err);
+        GATEKEEPER.serverError(res, "Error creating event");
+
+    })
 }
