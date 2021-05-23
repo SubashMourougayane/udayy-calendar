@@ -14,5 +14,9 @@ Postman Collection
 
 Write a .env file with all db and server details
 
+Make sure you install ```sequelize-cli``` globaly using ```sudo npm install sequelize-cli```
+
+```sequelize-cli db:migrate```
+
 ```npm run dev```
 

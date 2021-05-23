@@ -12,7 +12,6 @@ module.exports.createEvent = async (req, res, next) => {
     let endTime = req.body.endTime
 
     let overlapObject = await calendarUtils.checkOverlapEvent(req.user.id, startDate, endDate, startTime, endTime)
-    console.log(overlapObject);
     if (overlapObject.length === 0) {
 
         req.body['userId'] = req.user.id;
@@ -55,13 +54,11 @@ module.exports.createEvent = async (req, res, next) => {
                 let temp = iDate.setDate(iDate.getDate() + 1)
                 iDate = new Date(temp)
             }
-            console.log(recurringObjects);
             Event.bulkCreate(recurringObjects)
                 .then(data => {
                     GATEKEEPER.successDataResponse(res, data);
                 })
                 .catch(err => {
-                    console.log(err);
                     GATEKEEPER.serverError(res, "Error creating event");
 
                 })
@@ -75,7 +72,6 @@ module.exports.createEvent = async (req, res, next) => {
                     GATEKEEPER.successDataResponse(res, data);
                 })
                 .catch(err => {
-                    console.log(err);
                     GATEKEEPER.serverError(res, "Error creating event");
 
                 })
@@ -126,11 +122,9 @@ module.exports.getEvents = (req, res, next) => {
         }
     })
         .then(data => {
-            console.log(data);
             GATEKEEPER.successDataResponse(res, data);
         })
         .catch(err => {
-            console.log(err);
             GATEKEEPER.serverError(res, "Error creating event");
 
         })
@@ -145,11 +139,9 @@ module.exports.editOneInstance = (req, res, next) => {
         },
         returning: true,
     }).then(data => {
-        console.log(data);
         GATEKEEPER.successDataResponse(res, data[1]);
     })
     .catch(err => {
-        console.log(err);
         GATEKEEPER.serverError(res, "Error creating event");
 
     })
@@ -169,7 +161,6 @@ module.exports.editFromOneInstance = (req, res, next) => {
         GATEKEEPER.successDataResponse(res, data[1]);
     })
     .catch(err => {
-        console.log(err);
         GATEKEEPER.serverError(res, "Error creating event");
 
     })

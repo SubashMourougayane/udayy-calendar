@@ -10,7 +10,6 @@ module.exports.signup = (req, res, next) => {
             GATEKEEPER.successDataResponse(res, "Signup success, Please login to access dashboard");
         })
         .catch(err => {
-            console.log(err);
             GATEKEEPER.serverError(res, "Error creating user");
 
         })
